@@ -1,7 +1,5 @@
 {
-  "name": "cs-web-exam-pages",
-  "buildCommand": "node -e \"process.exit(0)\"",
-  "installCommand": "node -e \"process.exit(0)\"",
-  "outputDirectory": "./edgeone-pages",
+  "name": "cs-web",
+  "buildCommand": "pnpm next build",
   "nodeVersion": "22.11.0"
 }

@@ -12,6 +12,7 @@
  * （实测可膨胀到 2~4G+）。缓存可再生成，构建完成后立即删除，仅保留运行必需产物。
  */
 import { execSync } from 'node:child_process';
+import { rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -37,7 +38,7 @@ function main() {
 
   // 删除 Turbopack/Next 增量编译缓存（可再生，避免 .build 无限膨胀）
   console.log('▶ Removing build cache (.build/cache, regenerable)...');
-  run('rm -rf .build/cache');
+  rmSync(resolve(projectRoot, '.build/cache'), { recursive: true, force: true });
 
   console.log('▶ Bundling custom server with tsup...');
   run(

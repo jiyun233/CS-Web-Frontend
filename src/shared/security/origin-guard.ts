@@ -40,13 +40,17 @@ export function assertAllowedOrigin(req: Request): NextResponse | null {
     return jsonError('请求来源不合法', 403);
   }
 
-  const allowed = ALLOWED_ORIGINS.some((base) => {
-    try {
-      return new URL(base).origin === candidateOrigin;
-    } catch {
-      return false;
-    }
-  });
+  // 同源请求始终允许：EdgeOne Pages 等部署平台无需预先知道最终域名。
+  const requestOrigin = new URL(req.url).origin;
+  const allowed =
+    candidateOrigin === requestOrigin ||
+    ALLOWED_ORIGINS.some((base) => {
+      try {
+        return new URL(base).origin === candidateOrigin;
+      } catch {
+        return false;
+      }
+    });
   if (!allowed) {
     return jsonError('请求来源不合法', 403);
   }

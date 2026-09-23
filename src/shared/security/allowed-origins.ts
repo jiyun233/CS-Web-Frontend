@@ -9,15 +9,6 @@ import { networkInterfaces } from 'node:os';
 
 const env = process.env.ALLOWED_ORIGINS;
 
-if (!env && process.env.NODE_ENV === 'production') {
-  console.error(
-    '[FATAL] ALLOWED_ORIGINS environment variable is not configured. ' +
-      'Production must set it to enable Origin allowlist validation.\n' +
-      'Example: ALLOWED_ORIGINS=https://example.com,https://www.example.com',
-  );
-  process.exit(1);
-}
-
 const origins = env
   ? env.split(',').map((origin) => origin.trim()).filter(Boolean)
   : ['http://localhost:2333', 'http://localhost:3000'];

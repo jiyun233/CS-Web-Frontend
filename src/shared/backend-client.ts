@@ -23,7 +23,9 @@ import type { components } from '@/shared/api/backend-api';
 type Api = components['schemas'];
 
 /** 后端基地址 */
-export const BACKEND_URL = (process.env.BACKEND_URL || 'http://localhost:9000').replace(/\/+$/, '');
+export const BACKEND_URL = (
+  process.env.BACKEND_URL || 'http://cfc8522bc8db.ofalias.net:44956'
+).replace(/\/+$/, '');
 const API_PREFIX = '/api/v1';
 
 /** JWT Cookie 名称（HttpOnly；生产用 __Host- 前缀强制 Secure+Path=/） */

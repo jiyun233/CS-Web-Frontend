@@ -215,6 +215,24 @@ describe('assertAllowedOrigin', () => {
     });
     expect(assertAllowedOrigin(req)).toBeNull();
   });
+
+  it('部署域名与请求同源时放行，无需预先配置白名单', () => {
+    const req = makeRequest({
+      url: 'https://exam.edgeone.app/api/test',
+      headers: { Origin: 'https://exam.edgeone.app' },
+    });
+    expect(assertAllowedOrigin(req)).toBeNull();
+  });
+
+  it('部署域名之外的不同来源仍被拒绝', () => {
+    const req = makeRequest({
+      url: 'https://exam.edgeone.app/api/test',
+      headers: { Origin: 'https://evil.example.com' },
+    });
+    const result = assertAllowedOrigin(req);
+    expect(result).not.toBeNull();
+    expect(result?.status).toBe(403);
+  });
 });
 
 describe('RateLimiter', () => {
