@@ -2,13 +2,39 @@
 
 这个目录是可直接上传到 EdgeOne Pages 的独立静态考试站，不依赖 Next.js 构建。
 
-## 上传方式
+## 方式一：直接上传（推荐）
 
 1. 在 EdgeOne Pages 创建项目并选择“直接上传”。
-2. 上传本目录中的全部文件和 `functions/` 目录。
+2. 上传仓库根目录生成的 `edgeone-pages-upload.zip`。
 3. 部署完成后访问 Pages 域名，入口会自动进入考试列表。
 
-也可以使用仓库里的 `pnpm pages:pack` 生成 `edgeone-pages-upload.zip` 后上传。
+重新生成上传包：
+
+```bash
+pnpm pages:pack
+```
+
+## 方式二：Git 仓库构建
+
+仓库根目录已提供 `edgeone.json`，覆盖掉 Next.js 主站构建：
+
+```json
+{
+  "buildCommand": "node -e \"process.exit(0)\"",
+  "installCommand": "node -e \"process.exit(0)\"",
+  "outputDirectory": "./edgeone-pages"
+}
+```
+
+根目录的 `functions/` 是 EdgeOne 函数入口，`edgeone-pages/` 是静态资源目录。
+
+如果 Pages 控制台仍显示运行了 Next.js `pnpm build`，请在项目设置中把根目录改为：
+
+```text
+edgeone-pages
+```
+
+该目录本身包含可独立部署的 `index.html`、`app.js`、`styles.css` 和 `functions/`。
 
 ## 后端地址
 

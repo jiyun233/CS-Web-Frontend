@@ -48,6 +48,19 @@ afterEach(async () => {
 });
 
 describe('EdgeOne Pages API proxy', () => {
+  it('keeps the repository root function in sync with the direct-upload function', () => {
+    const directUploadSource = readFileSync(
+      new URL('../../edgeone-pages/functions/api/[[default]].js', import.meta.url),
+      'utf8',
+    );
+    const rootSource = readFileSync(
+      new URL('../../functions/api/[[default]].js', import.meta.url),
+      'utf8',
+    );
+
+    expect(rootSource).toBe(directUploadSource);
+  });
+
   it('forwards public exam requests', async () => {
     let requestedPath = '';
     handler = (request, response) => {

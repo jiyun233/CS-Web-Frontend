@@ -61,6 +61,9 @@ dist/
 .rsbuild/
 coverage/
 
+# EdgeOne CLI / Pages 生成的路由元数据
+.edgeone/
+
 # 数据库（前端 data/ 运行时数据已被公共段忽略；保留 tools/data 目录结构占位）
 !tools/data/
 !tools/data/.gitkeep
