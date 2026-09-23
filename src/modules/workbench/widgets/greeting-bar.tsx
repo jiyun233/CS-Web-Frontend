@@ -29,7 +29,7 @@ export default function GreetingBar({ onExport, onImport, onClear, onOpenLayout 
     <DnaCard corner="HI" className="px-5 py-4 flex flex-col justify-between gap-3 h-full min-h-0 overflow-hidden">
       <div className="flex items-center gap-3">
         <span className="display-serif text-[clamp(20px,3vw,30px)] text-[var(--foreground)]">
-          {t(greetingKey(now.getHours()))}
+          {mounted ? t(greetingKey(now.getHours())) : ''}
         </span>
         <span className="hidden sm:block w-px h-5 bg-[var(--border)]" />
         <span className="text-[13px] text-[var(--muted-foreground)]">

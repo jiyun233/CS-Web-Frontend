@@ -64,14 +64,11 @@ export function QuestionPanel(props: ExamState) {
           <div className="space-y-2">
             {currentQuestion.options.map((opt) => {
               const isSelected = answers[currentQuestion.id] === opt.label;
-              const result = results[currentQuestion.id];
-              const isCorrectAnswer = result !== undefined && opt.isCorrect;
-              const isWrongSelection = result !== undefined && isSelected && !opt.isCorrect;
 
               let optionClass = 'border-[var(--border)] hover:border-[var(--primary)]/40';
               if (submitted) {
-                if (isCorrectAnswer) optionClass = 'border-emerald-500/40 bg-emerald-500/5';
-                if (isWrongSelection) optionClass = 'border-red-500/40 bg-red-500/5';
+                // 交卷后不泄露正确答案，仅弱化样式
+                optionClass = 'border-[var(--border)] opacity-70 cursor-default';
               } else if (isSelected) {
                 optionClass = 'border-[var(--primary)]/40 bg-[var(--primary)]/5';
               }
@@ -91,11 +88,8 @@ export function QuestionPanel(props: ExamState) {
                       {opt.label}
                     </span>
                     <span className="text-sm">{opt.content}</span>
-                    {submitted && isCorrectAnswer && (
-                      <span className="meta-mono text-[11px] text-emerald-500 ml-auto shrink-0">✓ {t('correct')}</span>
-                    )}
-                    {submitted && isWrongSelection && (
-                      <span className="meta-mono text-[11px] text-red-500 ml-auto shrink-0">✗ {t('wrong')}</span>
+                    {submitted && isSelected && (
+                      <span className="meta-mono text-[11px] text-[var(--primary)] ml-auto shrink-0">✓</span>
                     )}
                   </div>
                 </button>

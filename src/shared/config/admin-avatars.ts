@@ -66,5 +66,12 @@ export const ADMIN_AVATARS: AdminAvatar[] = [
     position: '核心会员',
     qq: '3312268214',
   },
+  {
+    id: 'ljm',
+    name: '练嘉明',
+    grade: '2025级',
+    position: '核心会员',
+    qq: '1141782122',
+  },
 ];
 

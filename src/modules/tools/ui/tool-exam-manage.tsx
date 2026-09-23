@@ -1,12 +1,13 @@
 /**
  * @file 考试管理子面板 — 从 admin-tools-panel 拆出（GENERAL 2.4 按关注点拆分）
+ * 同时承载「新建考试」与「编辑考试」：Modal 复用同一表单，按 mode 切换标题/按钮/提交动作。
  */
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { GraduationCap } from 'lucide-react';
+import { GraduationCap, ListPlus, Pencil, Rocket } from 'lucide-react';
 import { ModalShell, Field } from '@/modules/admin/ui/shared';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useToast } from '@/components/feedback/toast';
@@ -17,6 +18,7 @@ import {
   EXAM_PAGE_SIZE,
   type Exam,
 } from './tool-types';
+import { ExamImportModal } from './tool-exam-import';
 import { apiRequest } from '@/shared/hooks/use-api-request';
 
 const EMPTY_EXAM_FORM = {
@@ -28,7 +30,63 @@ const EMPTY_EXAM_FORM = {
   techTags: [] as string[],
 };
 
-/** 考试管理子面板 — 考试列表 + 新建考试模态框 */
+type ExamForm = typeof EMPTY_EXAM_FORM;
+
+/**
+ * 把后端 Exam.tech_tags（可能是数组、JSON 字符串、逗号分隔字符串、null）解析为 string[]
+ * 兼容多种历史形态；解析失败降级为空数组。
+ */
+function parseTechTags(raw: string[] | string | null | undefined): string[] {
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === 'string' && raw.trim()) {
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed.map(String) : [];
+    } catch {
+      // 非合法 JSON，按逗号分隔降级
+      return raw.split(',').map((s) => s.trim()).filter(Boolean);
+    }
+  }
+  return [];
+}
+
+/**
+ * 把 UTC ISO 时间字符串转为 <input type="datetime-local"> 接受的本地格式
+ * YYYY-MM-DDTHH:MM（无时区偏移，浏览器按本地时区解释）。
+ */
+function toLocalDatetimeInput(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/**
+ * 解析后端返回的时间字符串为 Date：已带时区（Z / ±hh:mm）直接解析；
+ * naive UTC（历史数据）补 Z；解析失败返回 null（调用方显示 -）。
+ */
+function parseBackendDate(iso: string | null): Date | null {
+  if (!iso) return null;
+  const normalized = /(Z|[+-]\d{2}:?\d{2})$/i.test(iso) ? iso : `${iso}Z`;
+  const d = new Date(normalized);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/**
+ * 把后端 Exam（snake_case）转表单内（camelCase），用于编辑预填。
+ */
+function examToForm(exam: Exam): ExamForm {
+  return {
+    title: exam.title,
+    description: exam.description ?? '',
+    startTime: exam.start_time ? toLocalDatetimeInput(exam.start_time) : '',
+    endTime: exam.end_time ? toLocalDatetimeInput(exam.end_time) : '',
+    durationMinutes: String(exam.duration_minutes ?? 60),
+    techTags: parseTechTags(exam.tech_tags),
+  };
+}
+
+/** 考试管理子面板 — 考试列表 + 新建/编辑考试模态框 */
 export function ExamManagePanel() {
   const t = useTranslations('toolsAdmin');
   const tc = useTranslations('common');
@@ -40,10 +98,19 @@ export function ExamManagePanel() {
   const [examLoading, setExamLoading] = useState(false);
   const [examError, setExamError] = useState<string | null>(null);
 
+  // Modal 同时承载创建/编辑：editingExam 为 null=创建模式，非 null=编辑模式
   const [examModalOpen, setExamModalOpen] = useState(false);
-  const [examCreating, setExamCreating] = useState(false);
+  const [editingExam, setEditingExam] = useState<Exam | null>(null);
+  const [examSubmitting, setExamSubmitting] = useState(false);
+  const [publishingId, setPublishingId] = useState<string | null>(null);
   const [examFormError, setExamFormError] = useState<string | null>(null);
-  const [examForm, setExamForm] = useState(EMPTY_EXAM_FORM);
+  const [examForm, setExamForm] = useState<ExamForm>(EMPTY_EXAM_FORM);
+
+  // 批量导入题库：importExam 非 null 时渲染导入模态框
+  const [importExam, setImportExam] = useState<Exam | null>(null);
+
+  // 模式派生：editingExam 非 null 即编辑模式
+  const isEditMode = editingExam !== null;
 
   const fetchExams = useCallback(async (pg: number) => {
     setExamLoading(true);
@@ -68,9 +135,26 @@ export function ExamManagePanel() {
     fetchExams(examPage);
   }, [examPage, fetchExams]);
 
-  /** 关闭考试创建模态框并重置表单 */
+  /** 打开创建考试 Modal */
+  const openCreateModal = () => {
+    setEditingExam(null);
+    setExamForm(EMPTY_EXAM_FORM);
+    setExamFormError(null);
+    setExamModalOpen(true);
+  };
+
+  /** 打开编辑考试 Modal：用 exam 当前值预填表单 */
+  const openEditModal = (exam: Exam) => {
+    setEditingExam(exam);
+    setExamForm(examToForm(exam));
+    setExamFormError(null);
+    setExamModalOpen(true);
+  };
+
+  /** 关闭考试 Modal 并重置表单与编辑态 */
   const closeExamModal = () => {
     setExamModalOpen(false);
+    setEditingExam(null);
     setExamFormError(null);
     setExamForm(EMPTY_EXAM_FORM);
   };
@@ -93,7 +177,7 @@ export function ExamManagePanel() {
       return;
     }
 
-    setExamCreating(true);
+    setExamSubmitting(true);
     try {
       const r = await apiRequest('/api/admin/tools/exam', {
         method: 'POST',
@@ -119,7 +203,76 @@ export function ExamManagePanel() {
     } catch {
       setExamFormError(t('examNetworkRetry'));
     } finally {
-      setExamCreating(false);
+      setExamSubmitting(false);
+    }
+  };
+
+  /** 提交编辑考试（PUT /api/admin/tools/exam/{id}） */
+  const handleUpdateExam = async () => {
+    if (!editingExam) return;
+    setExamFormError(null);
+
+    if (!examForm.title.trim()) {
+      setExamFormError(t('examTitleEmpty'));
+      return;
+    }
+    if (!examForm.startTime || !examForm.endTime) {
+      setExamFormError(t('examTimeRequired'));
+      return;
+    }
+    const duration = parseInt(examForm.durationMinutes, 10);
+    if (!Number.isFinite(duration) || duration < 1 || duration > 1440) {
+      setExamFormError(t('examDurationRange'));
+      return;
+    }
+
+    setExamSubmitting(true);
+    try {
+      const r = await apiRequest(`/api/admin/tools/exam/${editingExam.id}`, {
+        method: 'PUT',
+        body: {
+          // 后端 ExamInput.status 默认 draft 但 PUT 是整体替换，
+          // 必须显式传 status 以避免已发布/已结束考试被误重置为 draft
+          status: editingExam.status,
+          title: examForm.title.trim(),
+          description: examForm.description.trim() || undefined,
+          startTime: new Date(examForm.startTime).toISOString(),
+          endTime: new Date(examForm.endTime).toISOString(),
+          durationMinutes: duration,
+          techTags: examForm.techTags.length > 0 ? examForm.techTags : undefined,
+        },
+      });
+
+      if (!r.ok) {
+        setExamFormError(r.error ?? t('examUpdateFailed'));
+        return;
+      }
+
+      pushToast('success', t('examUpdated'));
+      closeExamModal();
+      fetchExams(examPage);
+    } catch {
+      setExamFormError(t('examNetworkRetry'));
+    } finally {
+      setExamSubmitting(false);
+    }
+  };
+
+  /** 发布考试（draft -> published）；已发布/已结束的考试不显示发布入口 */
+  const handlePublishExam = async (exam: Exam) => {
+    setPublishingId(exam.id);
+    try {
+      const r = await apiRequest(`/api/admin/tools/exam/${exam.id}/publish`, { method: 'POST' });
+      if (!r.ok) {
+        pushToast('error', t('examPublishFailed'));
+        return;
+      }
+      pushToast('success', t('examPublished'));
+      fetchExams(examPage);
+    } catch {
+      pushToast('error', t('examPublishFailed'));
+    } finally {
+      setPublishingId(null);
     }
   };
 
@@ -134,7 +287,7 @@ export function ExamManagePanel() {
             variant="primary-outline"
             size="sm"
             type="button"
-            onClick={() => setExamModalOpen(true)}
+            onClick={openCreateModal}
           >
             {t('newExam')}
           </Button>
@@ -175,7 +328,8 @@ export function ExamManagePanel() {
                 <th className="text-left meta-mono py-3 pr-4">{t('colStatus')}</th>
                 <th className="text-left meta-mono py-3 pr-4">{t('colTime')}</th>
                 <th className="text-left meta-mono py-3 pr-4">{t('colDuration')}</th>
-                <th className="text-left meta-mono py-3">{t('colCreated')}</th>
+                <th className="text-left meta-mono py-3 pr-4">{t('colCreated')}</th>
+                <th className="text-left meta-mono py-3">{t('colActions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -198,12 +352,47 @@ export function ExamManagePanel() {
                     </Badge>
                   </td>
                   <td className="py-3 pr-4 meta-mono text-[11px] text-[var(--muted-foreground)]">
-                    {exam.start_time ? new Date(exam.start_time + 'Z').toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
+                    {(() => {
+                      const d = parseBackendDate(exam.start_time);
+                      return d
+                        ? d.toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                        : '-';
+                    })()}
                   </td>
                   <td className="py-3 pr-4 meta-mono text-[11px] text-[var(--muted-foreground)]">
                     {exam.duration_minutes > 0 ? `${exam.duration_minutes} min` : t('durationUnlimited')}
                   </td>
-                  <td className="py-3 meta-mono text-[11px] text-[var(--muted-foreground)]">{formatDate(exam.created_at)}</td>
+                  <td className="py-3 pr-4 meta-mono text-[11px] text-[var(--muted-foreground)]">{formatDate(exam.created_at)}</td>
+                  <td className="py-3">
+                    <div className="flex items-center gap-3">
+                      {exam.status === 'draft' && (
+                        <button
+                          type="button"
+                          onClick={() => handlePublishExam(exam)}
+                          disabled={publishingId === exam.id}
+                          className="focus-amber meta-mono text-[11px] text-[var(--primary)] underline-grow inline-flex items-center gap-1 disabled:opacity-40"
+                        >
+                          {publishingId === exam.id ? t('publishing') : t('publishExam')}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(exam)}
+                        className="focus-amber meta-mono text-[11px] text-[var(--muted-foreground)] hover:text-[var(--primary)] underline-grow inline-flex items-center gap-1"
+                      >
+                        <Pencil className="w-3 h-3" />
+                        {t('editExam')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setImportExam(exam)}
+                        className="focus-amber meta-mono text-[11px] text-[var(--muted-foreground)] hover:text-[var(--primary)] underline-grow inline-flex items-center gap-1"
+                      >
+                        <ListPlus className="w-3 h-3" />
+                        {t('importQuestions')}
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -234,35 +423,67 @@ export function ExamManagePanel() {
       {exams.length > 0 && (
         <div className="md:hidden space-y-3">
           {exams.map((exam) => (
-            <Link
+            <div
               key={exam.id}
-              href={`/tools/exam/${exam.id}`}
-              className="block border border-[var(--border)] p-4 hover:border-[var(--primary)]/40 transition-colors"
+              className="relative border border-[var(--border)] p-4 transition-colors hover:border-[var(--primary)]/40"
             >
-              <div className="flex items-center gap-2 mb-1">
-                <GraduationCap className="w-3.5 h-3.5 text-[var(--primary)]" />
-                <span className={`meta-mono text-[10px] px-2 py-0.5 border ${
-                  exam.status === 'published' ? 'border-emerald-500/40 text-emerald-500' :
-                  exam.status === 'draft' ? 'border-amber-500/40 text-amber-500' :
-                  'border-[var(--border)] text-[var(--muted-foreground)]'
-                }`}>
-                  {exam.status === 'published' ? '已发布' :
-                   exam.status === 'draft' ? '草稿' :
-                   exam.status === 'ended' ? '已结束' : exam.status}
-                </span>
+              <div className="absolute top-3 right-3 flex items-center gap-3">
+                {exam.status === 'draft' && (
+                  <button
+                    type="button"
+                    onClick={() => handlePublishExam(exam)}
+                    aria-label={t('publishExam')}
+                    className="focus-amber text-[var(--primary)]"
+                  >
+                    <Rocket className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => openEditModal(exam)}
+                  aria-label={t('editExam')}
+                  className="focus-amber text-[var(--muted-foreground)] hover:text-[var(--primary)]"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setImportExam(exam)}
+                  aria-label={t('importQuestions')}
+                  className="focus-amber text-[var(--muted-foreground)] hover:text-[var(--primary)]"
+                >
+                  <ListPlus className="w-3.5 h-3.5" />
+                </button>
               </div>
-              <h3 className="text-[14px] text-[var(--foreground)]">{exam.title}</h3>
-              <div className="meta-mono text-[10px] text-[var(--muted-foreground)] mt-2">
-                {exam.start_time ? new Date(exam.start_time + 'Z').toLocaleString('zh-CN') : '-'} · {exam.duration_minutes}min
-              </div>
-            </Link>
+              <Link href={`/tools/exam/${exam.id}`} className="block">
+                <div className="flex items-center gap-2 mb-1">
+                  <GraduationCap className="w-3.5 h-3.5 text-[var(--primary)]" />
+                  <span className={`meta-mono text-[10px] px-2 py-0.5 border ${
+                    exam.status === 'published' ? 'border-emerald-500/40 text-emerald-500' :
+                    exam.status === 'draft' ? 'border-amber-500/40 text-amber-500' :
+                    'border-[var(--border)] text-[var(--muted-foreground)]'
+                  }`}>
+                    {exam.status === 'published' ? '已发布' :
+                     exam.status === 'draft' ? '草稿' :
+                     exam.status === 'ended' ? '已结束' : exam.status}
+                  </span>
+                </div>
+                <h3 className="text-[14px] text-[var(--foreground)]">{exam.title}</h3>
+                <div className="meta-mono text-[10px] text-[var(--muted-foreground)] mt-2">
+                  {(() => {
+                    const d = parseBackendDate(exam.start_time);
+                    return d ? d.toLocaleString('zh-CN') : '-';
+                  })()} · {exam.duration_minutes}min
+                </div>
+              </Link>
+            </div>
           ))}
         </div>
       )}
 
-      {/* 考试创建模态框 */}
+      {/* 考试创建/编辑模态框（同一表单按 mode 切换标题与提交动作） */}
       {examModalOpen && (
-        <ModalShell title={t('examModalTitle')} onClose={closeExamModal}>
+        <ModalShell title={isEditMode ? t('examEditModalTitle') : t('examModalTitle')} onClose={closeExamModal}>
           <div className="space-y-5">
             <Field label={t('fieldTitle')} count={`${examForm.title.length}/200`}>
               <input
@@ -354,7 +575,7 @@ export function ExamManagePanel() {
               <button
                 type="button"
                 onClick={closeExamModal}
-                disabled={examCreating}
+                disabled={examSubmitting}
                 className="focus-amber meta-mono text-[12px] text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
               >
                 {tc('cancel')}
@@ -362,14 +583,21 @@ export function ExamManagePanel() {
               <Button
                 variant="primary-outline"
                 type="button"
-                onClick={handleCreateExam}
-                disabled={examCreating}
+                onClick={isEditMode ? handleUpdateExam : handleCreateExam}
+                disabled={examSubmitting}
               >
-                {examCreating ? t('creating') : t('createExamBtn')}
+                {examSubmitting
+                  ? (isEditMode ? t('updating') : t('creating'))
+                  : (isEditMode ? t('updateExamBtn') : t('createExamBtn'))}
               </Button>
             </div>
           </div>
         </ModalShell>
+      )}
+
+      {/* 批量导入题库模态框 */}
+      {importExam && (
+        <ExamImportModal exam={importExam} onClose={() => setImportExam(null)} />
       )}
     </div>
   );

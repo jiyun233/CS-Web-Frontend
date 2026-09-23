@@ -35,14 +35,15 @@ export async function PUT(
   const proxy = await proxyBackend(req, {
     path: `/tools/admin/exam/${encodeURIComponent(id)}`,
     method: 'PUT',
+    // 字段对齐后端 ExamInput（snake_case），与 POST 一致：status 必传，避免后端默认 draft 重置已发布考试
     jsonBody: {
       title: body.title,
       description: body.description,
-      category: body.category,
-      difficulty: body.difficulty,
+      status: body.status,
+      start_time: body.startTime,
+      end_time: body.endTime,
       duration_minutes: body.durationMinutes,
-      pass_score: body.passScore,
-      max_attempts: body.maxAttempts,
+      tech_tags: Array.isArray(body.techTags) ? body.techTags : undefined,
     },
   });
 

@@ -16,6 +16,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { TECH_TAGS } from '@/shared/utils/tech-tags';
 import { apiRequest } from '@/shared/hooks/use-api-request';
+import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 
 type ExamTab = 'ongoing' | 'upcoming' | 'ended';
 
@@ -109,7 +110,17 @@ export default function ExamListPage() {
           onTabChange: (key) => setActiveTab(key as ExamTab),
         }}
         sidebarBottom={
-          <BackLink href="/tools">{t('back')}</BackLink>
+          <div className="flex items-baseline gap-4">
+            <BackLink href="/tools">{t('back')}</BackLink>
+            <VisibilityGate componentKey="tools-admin-panel">
+              <Link
+                href="/tools#exam"
+                className="meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors inline-block mt-2 text-[11px]"
+              >
+                {t('manageExam')}
+              </Link>
+            </VisibilityGate>
+          </div>
         }
       >
         <RevealTitle>

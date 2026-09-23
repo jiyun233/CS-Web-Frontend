@@ -1,5 +1,6 @@
 /**
- * @file 考试题目 API — GET/POST /api/tools/admin/exam/[id]/questions（BFF 薄转发）
+ * @file 答题后投稿出题 API — POST /api/tools/exam/[id]/contribute（BFF 薄转发）
+ * camelCase → snake_case：options.isCorrect→is_correct；题型固定 single_choice；出题人可空。
  */
 import { NextResponse } from 'next/server';
 import { assertAllowedOrigin } from '@/shared/security/security';
@@ -7,21 +8,10 @@ import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '
 
 export const runtime = 'nodejs';
 
-export async function GET(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
-  const proxy = await proxyBackend(req, {
-    path: `/tools/admin/exam/${encodeURIComponent(id)}/questions`,
-  });
-
-  if (proxy.status !== 200) {
-    return NextResponse.json({ questions: [] });
-  }
-  const res = NextResponse.json({ questions: proxy.body });
-  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
-  return res;
+interface OptionIn {
+  label: string;
+  content: string;
+  isCorrect: boolean;
 }
 
 export async function POST(
@@ -31,18 +21,20 @@ export async function POST(
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+  const body = (await req.json().catch(() => ({}))) as {
+    title?: string;
+    author?: string;
+    options?: OptionIn[];
+  };
   const { id } = await params;
 
   const proxy = await proxyBackend(req, {
-    path: `/tools/admin/exam/${encodeURIComponent(id)}/questions`,
+    path: `/tools/exam/${encodeURIComponent(id)}/contribute`,
     method: 'POST',
-    // 字段对齐后端 QuestionInput（snake_case）：type/title/sort_order + options[{label, content, is_correct}]
     jsonBody: {
-      type: body.type ?? 'single_choice',
+      type: 'single_choice',
       title: body.title,
-      score: body.score ?? 5,
-      sort_order: body.sortOrder ?? 0,
+      author: body.author || undefined,
       options: Array.isArray(body.options)
         ? body.options.map((o) => ({
             label: o.label,
@@ -54,7 +46,7 @@ export async function POST(
   });
 
   if (proxy.status !== 200 && proxy.status !== 201) {
-    const err = normalizeError(proxy.body, '创建失败');
+    const err = normalizeError(proxy.body, '出题失败');
     const res = NextResponse.json(err, { status: proxy.status });
     if (proxy.clearAuth) clearAuthCookies(res);
     return res;

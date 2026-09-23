@@ -175,6 +175,7 @@ export interface ToolsMessages {
     back: string;
     backToList: string;
     backToTools: string;
+    manageExam: string;
     tabOngoing: string;
     tabUpcoming: string;
     tabEnded: string;
@@ -204,7 +205,23 @@ export interface ToolsMessages {
     badgeEnded: string;
     closeList: string;
     questionNav: string;
-    resultLine: string;
+    resultLine: string;
+    runResultLine: string;
+    authorLabel: string;
+    authorPlaceholder: string;
+    contributeTitle: string;
+    contributeTitleLabel: string;
+    contributeTitlePlaceholder: string;
+    contributeOptionPlaceholder: string;
+    contributeCorrectLabel: string;
+    contributeBtn: string;
+    contributeSubmitting: string;
+    contributeSuccess: string;
+    contributeFailed: string;
+    contributeDone: string;
+    contributeTitleRequired: string;
+    contributeOptionsRequired: string;
+    contributeCorrectRequired: string;
     notFound: string;
     listTitle: string;
     qNumber: string;
@@ -269,6 +286,56 @@ export interface ToolsMessages {
     cancel: string;
     creating: string;
     createExamBtn: string;
+    editExam: string;
+    examEditModalTitle: string;
+    updateExamBtn: string;
+    updating: string;
+    examUpdated: string;
+    examUpdateFailed: string;
+    colActions: string;
+    importQuestions: string;
+    importModalTitle: string;
+    importTarget: string;
+    importFormatHint: string;
+    importExample: string;
+    importPlaceholder: string;
+    fieldQuestions: string;
+    fieldScorePerQuestion: string;
+    parseBtn: string;
+    parsedCount: string;
+    importBtn: string;
+    importing: string;
+    importSuccess: string;
+    importFailed: string;
+    importNetworkRetry: string;
+    importNoQuestions: string;
+    importScoreRange: string;
+    importModeForm: string;
+    importModePaste: string;
+    formQuestionTitle: string;
+    formQuestionPlaceholder: string;
+    formOptionPlaceholder: string;
+    formCorrectOption: string;
+    formAuthor: string;
+    formAuthorPlaceholder: string;
+    formAddNextBtn: string;
+    formDraftCount: string;
+    formFinishBtn: string;
+    formDraftEmpty: string;
+    formTitleRequired: string;
+    formOptionsRequired: string;
+    formCorrectRequired: string;
+    formEdit: string;
+    formDelete: string;
+    publishExam: string;
+    publishing: string;
+    examPublished: string;
+    examPublishFailed: string;
+    qErrTitle: string;
+    qErrOptions: string;
+    qErrMissingOption: string;
+    qErrAnswer: string;
+    qErrAnswerInvalid: string;
     resourcePending: string;
     noPending: string;
     noPendingDesc: string;
@@ -669,6 +736,7 @@ export const zhCN: ToolsMessages = {
     back: '返回',
     backToList: '返回考试列表',
     backToTools: '返回工具',
+    manageExam: '管理考试',
     tabOngoing: '进行中',
     tabUpcoming: '即将开始',
     tabEnded: '已结束',
@@ -698,7 +766,23 @@ export const zhCN: ToolsMessages = {
     badgeEnded: '已结束',
     closeList: '关闭题目列表',
     questionNav: '题目 {current}/{total}',
-    resultLine: '{correct}/{total} 正确 · {score}/{max} 分',
+    resultLine: '{correct}/{total} 正确 · {score}/{max} 分',
+    runResultLine: '答对 {correct}/{total} · 得分 {score}/{max}',
+    authorLabel: '出题人',
+    authorPlaceholder: '选填，默认显示用户名',
+    contributeTitle: '我也出一道题',
+    contributeTitleLabel: '题目',
+    contributeTitlePlaceholder: '输入题干…',
+    contributeOptionPlaceholder: '选项内容',
+    contributeCorrectLabel: '选择正确答案',
+    contributeBtn: '提交题目 →',
+    contributeSubmitting: '提交中...',
+    contributeSuccess: '出题成功，已入题库',
+    contributeFailed: '出题失败',
+    contributeDone: '已出题 ✓',
+    contributeTitleRequired: '请填写题目',
+    contributeOptionsRequired: '选项 A-D 内容均需填写',
+    contributeCorrectRequired: '请选择正确答案',
     notFound: '考试不存在或已下架。',
     listTitle: '题目列表',
     qNumber: '题目 {num}',
@@ -763,6 +847,56 @@ export const zhCN: ToolsMessages = {
     cancel: '取消',
     creating: '创建中...',
     createExamBtn: '创建考试 →',
+    editExam: '编辑',
+    examEditModalTitle: '编辑考试 / Edit Exam',
+    updateExamBtn: '保存修改 →',
+    updating: '保存中...',
+    examUpdated: '考试已更新',
+    examUpdateFailed: '更新失败',
+    colActions: '操作 / Actions',
+    importQuestions: '导入题目',
+    importModalTitle: '批量导入题库 / Import Questions',
+    importTarget: '目标考试',
+    importFormatHint: '每题格式：题干一行（可带题号），选项 A-D 各一行，答案行如「答案: B」。题与题之间空一行。仅支持单选题（四个选项）。',
+    importExample: '1. Python 中哪个是正确的行注释符号？\nA. //\nB. #\nC. <!-- -->\nD. /* */\n答案: B',
+    importPlaceholder: '粘贴题目文本，每题含题干 + 四个选项 + 答案行…',
+    fieldQuestions: '题目内容',
+    fieldScorePerQuestion: '每题分数',
+    parseBtn: '解析预览',
+    parsedCount: '已解析 {count} 道题',
+    importBtn: '确认导入 →',
+    importing: '导入中...',
+    importSuccess: '成功导入 {count} 道题',
+    importFailed: '导入失败',
+    importNetworkRetry: '网络异常，请重试',
+    importNoQuestions: '请先粘贴题目并解析',
+    importScoreRange: '每题分数须在 1-100 之间',
+    importModeForm: '逐个录入',
+    importModePaste: '粘贴导入',
+    formQuestionTitle: '题目',
+    formQuestionPlaceholder: '输入题干…',
+    formOptionPlaceholder: '选项内容',
+    formCorrectOption: '选择正确答案',
+    formAuthor: '出题人',
+    formAuthorPlaceholder: '选填，粘贴导入可从题干括号提取',
+    formAddNextBtn: '下一题 →',
+    formDraftCount: '已录入 {count} 道题',
+    formFinishBtn: '填写完毕 提交 →',
+    formDraftEmpty: '录入的题目会列在这里，逐条「下一题」累积',
+    formTitleRequired: '请填写题目',
+    formOptionsRequired: '选项 A-D 内容均需填写',
+    formCorrectRequired: '请选择正确答案',
+    formEdit: '编辑',
+    formDelete: '删除',
+    publishExam: '发布',
+    publishing: '发布中...',
+    examPublished: '考试已发布',
+    examPublishFailed: '发布失败',
+    qErrTitle: '第 {q} 题缺少题干',
+    qErrOptions: '第 {q} 题选项数量为 {n}，需恰好 4 个',
+    qErrMissingOption: '第 {q} 题缺少选项 {opt}',
+    qErrAnswer: '第 {q} 题缺少答案行（如「答案: B」）',
+    qErrAnswerInvalid: '第 {q} 题答案 {ans} 不在选项中',
     resourcePending: '待审核 {count} 条',
     noPending: '[ 暂无待审核 / No Pending ]',
     noPendingDesc: '所有资源已审核完毕。',
@@ -1163,6 +1297,7 @@ export const en: ToolsMessages = {
     back: 'Back',
     backToList: 'Back to Exams',
     backToTools: 'Back to Tools',
+    manageExam: 'Manage Exams',
     tabOngoing: 'Ongoing',
     tabUpcoming: 'Upcoming',
     tabEnded: 'Ended',
@@ -1192,7 +1327,23 @@ export const en: ToolsMessages = {
     badgeEnded: 'Ended',
     closeList: 'Close question list',
     questionNav: 'Question {current}/{total}',
-    resultLine: '{correct}/{total} correct · {score}/{max} pts',
+    resultLine: '{correct}/{total} correct · {score}/{max} pts',
+    runResultLine: 'Correct {correct}/{total} · Score {score}/{max}',
+    authorLabel: 'Author',
+    authorPlaceholder: 'Optional, defaults to your username',
+    contributeTitle: 'Add a question',
+    contributeTitleLabel: 'Question',
+    contributeTitlePlaceholder: 'Enter the question…',
+    contributeOptionPlaceholder: 'Option content',
+    contributeCorrectLabel: 'Correct answer',
+    contributeBtn: 'Submit →',
+    contributeSubmitting: 'Submitting...',
+    contributeSuccess: 'Question added to the bank',
+    contributeFailed: 'Failed to add',
+    contributeDone: 'Submitted ✓',
+    contributeTitleRequired: 'Please enter the question',
+    contributeOptionsRequired: 'Options A-D are all required',
+    contributeCorrectRequired: 'Please choose the correct answer',
     notFound: 'Exam not found or removed.',
     listTitle: 'Question List',
     qNumber: 'Question {num}',
@@ -1257,6 +1408,56 @@ export const en: ToolsMessages = {
     cancel: 'Cancel',
     creating: 'Creating...',
     createExamBtn: 'Create exam →',
+    editExam: 'Edit',
+    examEditModalTitle: 'Edit Exam',
+    updateExamBtn: 'Save changes →',
+    updating: 'Saving...',
+    examUpdated: 'Exam updated',
+    examUpdateFailed: 'Update failed',
+    colActions: 'Actions',
+    importQuestions: 'Import',
+    importModalTitle: 'Batch Import Questions',
+    importTarget: 'Target exam',
+    importFormatHint: 'Format per question: stem in one line (numbering optional), options A-D one per line, then an answer line like "Answer: B". Separate questions with a blank line. Single-choice only (four options).',
+    importExample: '1. Which is the correct line comment symbol in Python?\nA. //\nB. #\nC. <!-- -->\nD. /* */\nAnswer: B',
+    importPlaceholder: 'Paste question text here, each with a stem + four options + answer line...',
+    fieldQuestions: 'Questions',
+    fieldScorePerQuestion: 'Score per question',
+    parseBtn: 'Parse',
+    parsedCount: '{count} questions parsed',
+    importBtn: 'Import →',
+    importing: 'Importing...',
+    importSuccess: 'Imported {count} questions',
+    importFailed: 'Import failed',
+    importNetworkRetry: 'Network error, please retry',
+    importNoQuestions: 'Paste questions and parse first',
+    importScoreRange: 'Score per question must be 1-100',
+    importModeForm: 'Form',
+    importModePaste: 'Paste',
+    formQuestionTitle: 'Question',
+    formQuestionPlaceholder: 'Enter the question…',
+    formOptionPlaceholder: 'Option content',
+    formCorrectOption: 'Correct answer',
+    formAuthor: 'Author',
+    formAuthorPlaceholder: 'Optional',
+    formAddNextBtn: 'Next →',
+    formDraftCount: '{count} questions added',
+    formFinishBtn: 'Finish & submit →',
+    formDraftEmpty: 'Questions you add will be listed here',
+    formTitleRequired: 'Please enter the question',
+    formOptionsRequired: 'Options A-D are all required',
+    formCorrectRequired: 'Please choose the correct answer',
+    formEdit: 'Edit',
+    formDelete: 'Delete',
+    publishExam: 'Publish',
+    publishing: 'Publishing...',
+    examPublished: 'Exam published',
+    examPublishFailed: 'Publish failed',
+    qErrTitle: 'Q{q}: missing question stem',
+    qErrOptions: 'Q{q}: {n} options, need exactly 4',
+    qErrMissingOption: 'Q{q}: missing option {opt}',
+    qErrAnswer: 'Q{q}: missing answer line (e.g. "Answer: B")',
+    qErrAnswerInvalid: 'Q{q}: answer {ans} not in options',
     resourcePending: '{count} pending',
     noPending: '[ 暂无待审核 / No Pending ]',
     noPendingDesc: 'All resources reviewed.',

@@ -14,7 +14,8 @@ import { useTranslations } from 'next-intl';
 import { SkeletonLine, BackLink, Button } from '@/components';
 import { useExam } from './use-exam';
 import { QuestionList } from './question-list';
-import { QuestionPanel } from './question-panel';
+import { QuestionPanel } from './question-panel';
+import { ContributeForm } from './contribute-form';
 
 export default function ExamPage({ params }: { params: Promise<{ id: string }> }) {
   const t = useTranslations('toolsExam');
@@ -35,6 +36,7 @@ export default function ExamPage({ params }: { params: Promise<{ id: string }> }
     correctCount,
     totalScore,
     maxScore,
+    runResult,
   } = exam;
 
   if (loading) {
@@ -51,7 +53,7 @@ export default function ExamPage({ params }: { params: Promise<{ id: string }> }
     );
   }
 
-  if (error && !detail) {
+  if (error && !submitted && !runResult) {
     return (
       <main className="relative pt-16 pixel-page">
         <div className="max-w-[1600px] mx-auto px-6 py-24 text-center">
@@ -73,9 +75,11 @@ export default function ExamPage({ params }: { params: Promise<{ id: string }> }
       <div className="border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-sm sticky top-16 z-[var(--z-banner)]">
         <div className="max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4 min-w-0">
-            <BackLink href="/tools/exam" className="mt-0 shrink-0">
-              {t('back')}
-            </BackLink>
+            {submitted && (
+              <BackLink href="/tools/exam" className="mt-0 shrink-0">
+                {t('back')}
+              </BackLink>
+            )}
             <h1 className="text-lg font-semibold truncate">{detail.title}</h1>
             {timeRemaining !== null && (
               <span
@@ -99,7 +103,7 @@ export default function ExamPage({ params }: { params: Promise<{ id: string }> }
             )}
             {submitted && (
               <div className="meta-mono text-[13px] text-[var(--primary)]">
-                {t('resultLine', { correct: correctCount, total: questions.length, score: totalScore, max: maxScore })}
+                {t('runResultLine', { correct: correctCount, total: runResult?.totalQuestions ?? questions.length, score: totalScore, max: maxScore })}
               </div>
             )}
           </div>
@@ -115,6 +119,13 @@ export default function ExamPage({ params }: { params: Promise<{ id: string }> }
           <QuestionPanel {...exam} />
         </div>
       </div>
+
+      {/* 交卷后可选项：我也出一道题 */}
+      {submitted && runResult && (
+        <div className="max-w-[1600px] mx-auto px-6 pt-8 pb-16 md:pl-[72px] lg:pl-[88px]">
+          <ContributeForm examId={id} />
+        </div>
+      )}
     </main>
   );
 }

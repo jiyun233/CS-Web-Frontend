@@ -185,14 +185,16 @@ export default async function RootLayout({
         并在 hydrate 前执行，且不会触发 “Encountered a script tag” 渲染告警
         （裸 <script> 在 React 19 组件树中渲染时会触发该告警）。
       */}
-      <Script
-        id="theme-init"
-        strategy="beforeInteractive"
-        nonce={nonce}
-        dangerouslySetInnerHTML={{
-          __html: `(function(){try{var s=localStorage.getItem('theme');var d=s==='dark'||(!s&&true);var h=document.documentElement;h.classList.toggle('dark',d);}catch(e){}}())`,
-        }}
-      />
+      <head>
+        <Script
+          id="theme-init"
+          strategy="beforeInteractive"
+          nonce={nonce}
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var s=localStorage.getItem('theme');var d=s==='dark'||(!s&&true);var h=document.documentElement;h.classList.toggle('dark',d);}catch(e){}}())`,
+          }}
+        />
+      </head>
       <body
         className="antialiased bg-background text-foreground"
       >

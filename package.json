@@ -27,7 +27,8 @@
     "deploy:build": "docker compose -f tools/deploy/docker-compose.yml build",
     "deploy:up": "docker compose -f tools/deploy/docker-compose.yml up -d",
     "deploy:down": "docker compose -f tools/deploy/docker-compose.yml down",
-    "deploy:logs": "docker compose -f tools/deploy/docker-compose.yml logs -f"
+    "deploy:logs": "docker compose -f tools/deploy/docker-compose.yml logs -f",
+    "pages:pack": "node ./tools/scripts/deploy/pack-edgeone-pages.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",

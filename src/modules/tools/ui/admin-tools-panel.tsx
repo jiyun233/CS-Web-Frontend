@@ -15,7 +15,12 @@ import type { ToolSubView } from './tool-types';
 /** 管理员工具集面板（资源审核 + 考试管理 + 任务管理） */
 export function AdminToolsPanel() {
   const t = useTranslations('toolsAdmin');
-  const [subView, setSubView] = useState<ToolSubView>('resources');
+  // 支持 #exam 深链直达考试管理子视图（/tools/exam 页「管理考试」入口跳转使用），默认资源审核
+  const initialSubView = (): ToolSubView => {
+    if (typeof window !== 'undefined' && window.location.hash === '#exam') return 'exams';
+    return 'resources';
+  };
+  const [subView, setSubView] = useState<ToolSubView>(initialSubView);
 
   return (
     <div>
